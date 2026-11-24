@@ -1,8 +1,4 @@
-# Arhivă universitară
 
-Materiale, laboratoare, teme și proiecte realizate în timpul studiilor de **Informatică Economică**.
-
-## Structură
 
 ### Anul I
 - [Programarea calculatoarelor](anul-i/programarea-calculatoarelor/)
@@ -22,7 +18,3 @@ Materiale, laboratoare, teme și proiecte realizate în timpul studiilor de **In
 - [Lucrare de licență](anul-iii/lucrare-licenta/)
 - [Practică pentru elaborarea lucrării de licență](anul-iii/practica-elaborare-lucrare-licenta/)
 
-## Note
-- Structura este organizată pe ani universitari și discipline.
-- Conținutul existent al disciplinelor și proiectelor este păstrat.
-- Repository-ul nu folosește GitHub Actions sau fluxuri CI/CD.
