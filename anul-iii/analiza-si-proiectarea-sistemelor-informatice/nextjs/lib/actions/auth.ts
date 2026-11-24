@@ -1,4 +1,4 @@
-'use server'
+// 'use server' removed for static export
 
 import { redirect } from 'next/navigation'
 import { cookies } from 'next/headers'

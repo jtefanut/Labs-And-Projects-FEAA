@@ -1,4 +1,4 @@
-'use server'
+// 'use server' removed for static export
 
 import { db } from '@/lib/data'
 import { getAuthUser } from '@/lib/auth'
