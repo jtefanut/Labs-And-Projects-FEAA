@@ -16,6 +16,7 @@ on:
 env:
   PROJECT_DIR: anul-iii/analiza-si-proiectarea-sistemelor-informatice/nextjs
   NODE_VERSION: '20'
+  BASE_PATH: /Labs-And-Projects-FEAA
 
 permissions:
   contents: read
@@ -27,9 +28,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # ──────────────────────────────────────────────
-  # 1. Build
-  # ──────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
@@ -54,20 +52,16 @@ jobs:
       - name: Build Next.js (static export)
         run: npm run build
         env:
-          NEXT_PUBLIC_APP_URL: ${{ github.server_url }}/${{ github.repository }}/tree/main/${{ env.PROJECT_DIR }}
+          NEXT_PUBLIC_APP_URL: ${{ github.server_url }}/${{ github.repository }}
           NEXT_PUBLIC_DEFAULT_LOCALE: ro
-          SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'ci-demo-secret' }}
-          # Enable static export for GitHub Pages
+          SESSION_SECRET: ci-demo-secret
           NEXT_OUTPUT: export
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: ${{ env.PROJECT_DIR }}/out/
+          path: ${{ env.PROJECT_DIR }}/out${{ env.BASE_PATH }}/
 
-  # ──────────────────────────────────────────────
-  # 2. Deploy to GitHub Pages
-  # ──────────────────────────────────────────────
   deploy:
     name: Deploy to GitHub Pages
     environment:
