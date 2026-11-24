@@ -22,6 +22,10 @@ const CATEGORY_TITLES: Record<string, { ro: string; en: string }> = {
   devops: { ro: 'DevOps', en: 'DevOps' },
 }
 
+export async function generateStaticParams() {
+  return ['hosting', 'wordpress', 'vps', 'cloud', 'domain', 'email', 'backup', 'ssl', 'apps', 'dedicated', 'gpu', 'managed', 'storage', 'database', 'security', 'devops'].map((category) => ({ category }))
+}
+
 export default async function CatalogCategoryPage({ params }: { params: Promise<{ category: string }> }) {
   const { category } = await params
   const cookieStore = await cookies()

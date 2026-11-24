@@ -18,6 +18,10 @@ const LEGAL_CONTENT: Record<string, Record<string, string>> = {
   complaints: { ro: 'Procedura de reclamare pentru clienți.', en: 'Complaint procedure for clients.' },
 }
 
+export async function generateStaticParams() {
+  return ['terms', 'privacy', 'cookies', 'withdrawal', 'complaints'].map((page) => ({ page }))
+}
+
 export default async function LegalPage({ params }: { params: Promise<{ page: string }> }) {
   const { page } = await params
   const cookieStore = await cookies()
