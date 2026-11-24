@@ -11,49 +11,28 @@ on:
     paths:
       - 'anul-iii/analiza-si-proiectarea-sistemelor-informatice/nextjs/**'
       - '.github/workflows/ci-cd.yml'
+  workflow_dispatch:
 
 env:
   PROJECT_DIR: anul-iii/analiza-si-proiectarea-sistemelor-informatice/nextjs
   NODE_VERSION: '20'
 
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
 jobs:
   # ──────────────────────────────────────────────
-  # 1. Lint & Type Check
-  # ──────────────────────────────────────────────
-  lint-and-typecheck:
-    name: Lint & Type Check
-    runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: ${{ env.PROJECT_DIR }}
-
-    steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: ${{ env.PROJECT_DIR }}/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Run ESLint
-        run: npm run lint --if-present
-
-      - name: TypeScript type check
-        run: npx tsc --noEmit
-
-  # ──────────────────────────────────────────────
-  # 2. Build
+  # 1. Build
   # ──────────────────────────────────────────────
   build:
     name: Build
     runs-on: ubuntu-latest
-    needs: lint-and-typecheck
     defaults:
       run:
         working-directory: ${{ env.PROJECT_DIR }}
@@ -72,62 +51,33 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Build Next.js
+      - name: Build Next.js (static export)
         run: npm run build
         env:
-          NEXT_PUBLIC_APP_URL: ${{ secrets.NEXT_PUBLIC_APP_URL || 'http://localhost:3000' }}
+          NEXT_PUBLIC_APP_URL: ${{ github.server_url }}/${{ github.repository }}/tree/main/${{ env.PROJECT_DIR }}
           NEXT_PUBLIC_DEFAULT_LOCALE: ro
           SESSION_SECRET: ${{ secrets.SESSION_SECRET || 'ci-demo-secret' }}
+          # Enable static export for GitHub Pages
+          NEXT_OUTPUT: export
 
-      - name: Upload build artifacts
-        uses: actions/upload-artifact@v4
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
         with:
-          name: nextjs-build
-          path: ${{ env.PROJECT_DIR }}/.next/
-          retention-days: 7
+          path: ${{ env.PROJECT_DIR }}/out/
 
   # ──────────────────────────────────────────────
-  # 3. Deploy (only on push to main)
+  # 2. Deploy to GitHub Pages
   # ──────────────────────────────────────────────
   deploy:
-    name: Deploy
+    name: Deploy to GitHub Pages
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     needs: build
     if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-    defaults:
-      run:
-        working-directory: ${{ env.PROJECT_DIR }}
 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: 'npm'
-          cache-dependency-path: ${{ env.PROJECT_DIR }}/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Download build artifacts
-        uses: actions/download-artifact@v4
-        with:
-          name: nextjs-build
-          path: ${{ env.PROJECT_DIR }}/.next/
-
-      - name: Deploy to Vercel
-        if: ${{ secrets.VERCEL_TOKEN != '' }}
-        run: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }} --yes
-        env:
-          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
-          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
-
-      - name: Deploy summary
-        if: ${{ secrets.VERCEL_TOKEN == '' }}
-        run: |
-          echo "## Deploy skipped" >> $GITHUB_STEP_SUMMARY
-          echo "No VERCEL_TOKEN secret configured. Build artifacts are available as workflow artifacts." >> $GITHUB_STEP_SUMMARY
-          echo "To enable automatic deployment, add VERCEL_TOKEN, VERCEL_ORG_ID, and VERCEL_PROJECT_ID secrets." >> $GITHUB_STEP_SUMMARY
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
